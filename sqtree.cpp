@@ -7,6 +7,7 @@
  */
 
 #include "sqtree.h"
+#include <float.h>
 
 // First Node constructor, given.
 SQtree::Node::Node(pair<int,int> ul, int w, int h, RGBAPixel a, double v)
@@ -46,12 +47,12 @@ SQtree::SQtree(PNG & imIn, double tol) {
   // Your code here.
   
   stats s(imIn); 
-  width = imIn.width();
-  height = imIn.height();
+  //width = imIn.width();
+  //height = imIn.height();
 
   pair<int, int> upper_left = make_pair(0, 0);
 
-  buildTree(s, upper_left, width, height, tol);
+  root = buildTree(s, upper_left, imIn.width(), imIn.height(), tol);
   
 
 }
@@ -61,17 +62,49 @@ SQtree::SQtree(PNG & imIn, double tol) {
  */
 SQtree::Node * SQtree::buildTree(stats & s, pair<int,int> & ul,
 				 int w, int h, double tol) {
-  // Your code here.
-   
+  Node * current = new Node(ul, w, h, s.getAvg(ul, w, h), s.getVar(ul, w, h));
+  
+  if ((w == 1 && h == 1) || s.getVar(ul, w, h) < tol) {
+    return current;
+  }
 
-  // if (getVar(ul,w,h) > tol) {
-  //Node *returnNode = new Node (pair<int, int>(0,0), 1,1);
-  //   return returnNode;
-  // } else {
-    
-  // }
+  double totalMinVariability = DBL_MAX;
+  pair<int,int> minVarUL = ul;
+  
+  for (int y = ul.second; y < ul.second + h; y++) {
+    for (int x = ul.first; x < ul.first + w; x++) {
+      double NWVar = s.getVar(ul, x, y);
+      double NEVar = s.getVar(make_pair(x, 0), w-x, y);
+      double SWVar = s.getVar(make_pair(0, y), x, h-y);
+      double SEVar = s.getVar(make_pair(x, y), w-x, h-y);
+      double currentMaxVariability = max(NWVar, max (NEVar, max(SWVar, SEVar)));
+      if (currentMaxVariability < totalMinVariability) {
+        totalMinVariability = currentMaxVariability;
+        minVarUL.first = x;
+        minVarUL.second = y;
+      }
+    }
+  }
 
-  return NULL;
+  if (minVarUL.second == 0 && minVarUL.first == 0) {
+    return current;
+  } else if (minVarUL.second == 0) {
+    current->SW = buildTree(s, ul, minVarUL.first, h, tol);
+    current->SE = buildTree(s, minVarUL, w - minVarUL.first, h, tol);
+  } else if (minVarUL.first == 0) {
+    current->NE = buildTree(s, ul, w, minVarUL.second, tol);
+    current->SE = buildTree(s, minVarUL, w, h - minVarUL.second, tol);
+  } else {
+    pair<int,int> NEpair = make_pair(minVarUL.first, ul.second);
+    pair<int,int> SWpair = make_pair(ul.first, minVarUL.second);
+    current->NW = buildTree(s, ul, minVarUL.first, minVarUL.second, tol);
+    current->NE = buildTree(s, NEpair, w - minVarUL.first, minVarUL.second, tol);
+    current->SW = buildTree(s, SWpair, minVarUL.first, h - minVarUL.second, tol);
+    current->SE = buildTree(s, minVarUL, w - minVarUL.first, h - minVarUL.second, tol);
+  }
+
+
+  return current;
 
 
 
