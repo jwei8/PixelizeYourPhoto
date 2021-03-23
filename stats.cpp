@@ -3,11 +3,9 @@
 #include "stats.h"
 using namespace std;
 #include <iostream>
-//testcomments
+
 stats::stats(PNG &im)
 {
-
-  //cout << "begin" <<endl;
 
   /**
    * Initialize the private vectors so that, for each color, entry 

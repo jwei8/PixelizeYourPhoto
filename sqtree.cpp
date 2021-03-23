@@ -45,18 +45,13 @@ SQtree & SQtree::operator=(const SQtree & rhs) {
 SQtree::SQtree(PNG & imIn, double tol) {
   // Your code here.
   
-  // stats s(imIn); 
-  // width = imIn.width();
-  // height = imIn.height();
+  stats s(imIn); 
+  width = imIn.width();
+  height = imIn.height();
 
-  // pair<int, int> upper_left = make_pair(0, 0);
+  pair<int, int> upper_left = make_pair(0, 0);
 
-  // buildTree(s, upper_left, width, height, tol);
-
-  
-
-
-
+  buildTree(s, upper_left, width, height, tol);
   
 
 }
