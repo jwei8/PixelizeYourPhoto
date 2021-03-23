@@ -45,13 +45,13 @@ SQtree & SQtree::operator=(const SQtree & rhs) {
 SQtree::SQtree(PNG & imIn, double tol) {
   // Your code here.
   
-  stats s(imIn); 
-  im_width = imIn.width();
-  im_height = imIn.height();
+  // stats s(imIn); 
+  // width = imIn.width();
+  // height = imIn.height();
 
-  pair<int, int> upper_left = make_pair(0, 0);
+  // pair<int, int> upper_left = make_pair(0, 0);
 
-  buildTree(s, upper_left, im_width, im_height, tol);
+  // buildTree(s, upper_left, width, height, tol);
 
   
 
@@ -70,12 +70,9 @@ SQtree::Node * SQtree::buildTree(stats & s, pair<int,int> & ul,
    
 
   // if (getVar(ul,w,h) > tol) {
-  // Node *returnNode = new Node (pair<int, int>(0,0), 1,1);
+  //Node *returnNode = new Node (pair<int, int>(0,0), 1,1);
   //   return returnNode;
   // } else {
-
-  //   Node *child_NW = new Node (ul, w,h);
-  //   Node *child_NE = new Node (make_pair(ul.first + w-1, ul.second), w,h);
     
   // }
 
@@ -91,14 +88,14 @@ SQtree::Node * SQtree::buildTree(stats & s, pair<int,int> & ul,
  */
 PNG SQtree::render() {
   // Your code here.
-  PNG result(10,10);
+  PNG result;
 
   // return render_recursive(root);
   return result;
 
 }
 
-void SQtree::render_recursive(SQtree:: Node *node, PNG &im) {
+void SQtree::render_recursive(Node *node) {
   // PNG result (width, height);
   // if (node->NE == NULL || node->NW == NULL || node->SW == NULL || node->SE == NULL) {
   //   for (int x=0; x < width; x++) {
@@ -191,3 +188,4 @@ int SQtree::calc_size(SQtree::Node* root){
   return size;
 
 }
+

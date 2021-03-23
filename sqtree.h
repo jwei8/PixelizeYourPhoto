@@ -27,8 +27,7 @@ using namespace cs221util;
  */
 
 class SQtree {
- //private:
- public:
+ private:
 
   /**
    * The Node class is private to the tree class via the principle of
@@ -153,9 +152,6 @@ class SQtree {
 
   Node* root; // ptr to the root of the SQtree
 
-  int im_width;
-  int im_height;
-
   
   /* BEGIN ============== Required private functions (NOT GIVEN) ====== */
 
@@ -195,9 +191,7 @@ class SQtree {
 
   int calc_size(SQtree:: Node* root);
 
-  void render_recursive(SQtree:: Node *node, PNG &im);
-
-  void copy_helper(const SQtree::Node *& other);
+  void render_recursive(SQtree:: Node *node);
 
 
 
