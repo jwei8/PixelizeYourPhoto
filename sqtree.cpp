@@ -58,21 +58,45 @@ SQtree::Node * SQtree::buildTree(stats & s, pair<int,int> & ul,
   Node * current = new Node(ul, w, h, s.getAvg(ul, w, h), s.getVar(ul, w, h));
   
   if ((w == 1 && h == 1) || s.getVar(ul, w, h) < tol) {
-    return current;
+    return new Node(ul, w, h, s.getAvg(ul, w, h), s.getVar(ul, w, h));
   }
 
-  double totalMinVariability = __DBL_MAX__;
+  double totalMinVariability = s.getVar(ul,w,h);
   pair<int,int> minVarUL = ul;
-
+  
   for (int y = ul.second; y < ul.second + h; y++) {
     for (int x = ul.first; x < ul.first + w; x++) {
       if (x == ul.first && y == ul.second) {
         continue;
       }
-      double NWVar = s.getVar(ul, x - ul.first, y - ul.second);
-      double NEVar = s.getVar(make_pair(x, ul.second), w - x + ul.first, y - ul.second);
-      double SWVar = s.getVar(make_pair(ul.first, y), x - ul.first, h - y + ul.second);
-      double SEVar = s.getVar(make_pair(x, y), w - x + ul.first, h - y + ul.second);
+
+      if ( x== ul.first && y !=ul.second ) {
+      double upVar = s.getVar(ul, w, y - ul.second);
+      double downVar = s.getVar(make_pair(x, y), w, h-y + ul.second);
+      double currentMaxVariability = max(upVar, downVar);
+      if (currentMaxVariability < totalMinVariability) {
+        totalMinVariability = currentMaxVariability;
+        minVarUL.first = x;
+        minVarUL.second = y;
+      }
+      }
+
+      if ( x != ul.first && y == ul.second) {
+      double leftVar = s.getVar(ul, x - ul.first, h);
+      double rightVar = s.getVar(make_pair(x, y), w-x+ul.first, h);
+      double currentMaxVariability = max (leftVar, rightVar);
+
+      if (currentMaxVariability < totalMinVariability) {
+        totalMinVariability = currentMaxVariability;
+        minVarUL.first = x;
+        minVarUL.second = y;
+      }
+      }
+
+      double NWVar = s.getVar(ul, x-ul.first, y-ul.second);
+      double NEVar = s.getVar(make_pair(x, ul.second), w-x+ul.first, y);
+      double SWVar = s.getVar(make_pair(ul.first, y), x-ul.first, h-y+ul.second);
+      double SEVar = s.getVar(make_pair(x, y), w-x+ul.first, h-y+ul.second);
       double currentMaxVariability = max(NWVar, max (NEVar, max(SWVar, SEVar)));
       if (currentMaxVariability < totalMinVariability) {
         totalMinVariability = currentMaxVariability;
@@ -85,25 +109,30 @@ SQtree::Node * SQtree::buildTree(stats & s, pair<int,int> & ul,
   if (minVarUL.second == ul.second && minVarUL.first == ul.first) {
     return current;
   } else if (minVarUL.second == ul.second) {
-    current->SW = buildTree(s, ul, minVarUL.first + ul.first, h, tol);
-    current->SE = buildTree(s, minVarUL, w - minVarUL.first, h, tol);
+    // first !=0, second ==0, vertical line
+    current->SW = buildTree(s, ul, minVarUL.first - ul.first , h, tol);
+    current->SE = buildTree(s, minVarUL, w - minVarUL.first + ul.first, h, tol);
   } else if (minVarUL.first == ul.first) {
-    current->NE = buildTree(s, ul, w, minVarUL.second + ul.second, tol);
-    current->SE = buildTree(s, minVarUL, w, h - minVarUL.second, tol);
+    // second not 0, first is 0, horizontal line
+    current->NW = buildTree(s, ul, w, minVarUL.second - ul.second, tol);
+    current->SW = buildTree(s, minVarUL, w, h - minVarUL.second + ul.second, tol);
   } else {
+
+    //two lines devide
     pair<int,int> NEpair = make_pair(minVarUL.first, ul.second);
     pair<int,int> SWpair = make_pair(ul.first, minVarUL.second);
     current->NW = buildTree(s, ul, minVarUL.first - ul.first, minVarUL.second - ul.second, tol);
-    current->NE = buildTree(s, NEpair, w - minVarUL.first, minVarUL.second - ul.second, tol);
-    current->SW = buildTree(s, SWpair, minVarUL.first - ul.first, h - minVarUL.second, tol);
-    current->SE = buildTree(s, minVarUL, w - minVarUL.first, h - minVarUL.second, tol);
+    current->NE = buildTree(s, NEpair, w - minVarUL.first + ul.first, minVarUL.second -ul.second, tol);
+    current->SW = buildTree(s, SWpair, minVarUL.first - ul.first, h - minVarUL.second + ul.second, tol);
+    current->SE = buildTree(s, minVarUL, w - minVarUL.first +ul.first, h - minVarUL.second + ul.second, tol);
   }
 
 
   return current;
 
-}
 
+
+}
   
 /**
  * Render SQtree and return the resulting image.
