@@ -7,7 +7,6 @@
  */
 
 #include "sqtree.h"
-#include <float.h>
 
 // First Node constructor, given.
 SQtree::Node::Node(pair<int,int> ul, int w, int h, RGBAPixel a, double v)
@@ -44,17 +43,11 @@ SQtree & SQtree::operator=(const SQtree & rhs) {
  * SQtree constructor given tolerance for variance.
  */
 SQtree::SQtree(PNG & imIn, double tol) {
-  // Your code here.
-  
   stats s(imIn); 
-  //width = imIn.width();
-  //height = imIn.height();
-
   pair<int, int> upper_left = make_pair(0, 0);
 
   root = buildTree(s, upper_left, imIn.width(), imIn.height(), tol);
   
-
 }
 
 /**
@@ -68,15 +61,18 @@ SQtree::Node * SQtree::buildTree(stats & s, pair<int,int> & ul,
     return current;
   }
 
-  double totalMinVariability = DBL_MAX;
+  double totalMinVariability = __DBL_MAX__;
   pair<int,int> minVarUL = ul;
-  
+
   for (int y = ul.second; y < ul.second + h; y++) {
     for (int x = ul.first; x < ul.first + w; x++) {
-      double NWVar = s.getVar(ul, x, y);
-      double NEVar = s.getVar(make_pair(x, 0), w-x, y);
-      double SWVar = s.getVar(make_pair(0, y), x, h-y);
-      double SEVar = s.getVar(make_pair(x, y), w-x, h-y);
+      if (x == ul.first && y == ul.second) {
+        continue;
+      }
+      double NWVar = s.getVar(ul, x - ul.first, y - ul.second);
+      double NEVar = s.getVar(make_pair(x, ul.second), w - x + ul.first, y - ul.second);
+      double SWVar = s.getVar(make_pair(ul.first, y), x - ul.first, h - y + ul.second);
+      double SEVar = s.getVar(make_pair(x, y), w - x + ul.first, h - y + ul.second);
       double currentMaxVariability = max(NWVar, max (NEVar, max(SWVar, SEVar)));
       if (currentMaxVariability < totalMinVariability) {
         totalMinVariability = currentMaxVariability;
@@ -86,27 +82,25 @@ SQtree::Node * SQtree::buildTree(stats & s, pair<int,int> & ul,
     }
   }
 
-  if (minVarUL.second == 0 && minVarUL.first == 0) {
+  if (minVarUL.second == ul.second && minVarUL.first == ul.first) {
     return current;
-  } else if (minVarUL.second == 0) {
-    current->SW = buildTree(s, ul, minVarUL.first, h, tol);
+  } else if (minVarUL.second == ul.second) {
+    current->SW = buildTree(s, ul, minVarUL.first + ul.first, h, tol);
     current->SE = buildTree(s, minVarUL, w - minVarUL.first, h, tol);
-  } else if (minVarUL.first == 0) {
-    current->NE = buildTree(s, ul, w, minVarUL.second, tol);
+  } else if (minVarUL.first == ul.first) {
+    current->NE = buildTree(s, ul, w, minVarUL.second + ul.second, tol);
     current->SE = buildTree(s, minVarUL, w, h - minVarUL.second, tol);
   } else {
     pair<int,int> NEpair = make_pair(minVarUL.first, ul.second);
     pair<int,int> SWpair = make_pair(ul.first, minVarUL.second);
-    current->NW = buildTree(s, ul, minVarUL.first, minVarUL.second, tol);
-    current->NE = buildTree(s, NEpair, w - minVarUL.first, minVarUL.second, tol);
-    current->SW = buildTree(s, SWpair, minVarUL.first, h - minVarUL.second, tol);
+    current->NW = buildTree(s, ul, minVarUL.first - ul.first, minVarUL.second - ul.second, tol);
+    current->NE = buildTree(s, NEpair, w - minVarUL.first, minVarUL.second - ul.second, tol);
+    current->SW = buildTree(s, SWpair, minVarUL.first - ul.first, h - minVarUL.second, tol);
     current->SE = buildTree(s, minVarUL, w - minVarUL.first, h - minVarUL.second, tol);
   }
 
 
   return current;
-
-
 
 }
 
@@ -116,69 +110,76 @@ SQtree::Node * SQtree::buildTree(stats & s, pair<int,int> & ul,
  */
 PNG SQtree::render() {
   // Your code here.
-  PNG result;
-
-  // return render_recursive(root);
+  PNG result (root->width, root->height);
+  render_recursive(root, result);
   return result;
 
 }
 
-void SQtree::render_recursive(Node *node) {
-  // PNG result (width, height);
-  // if (node->NE == NULL || node->NW == NULL || node->SW == NULL || node->SE == NULL) {
-  //   for (int x=0; x < width; x++) {
-  //     for (int y=0; y < height; y++) {
-  //       RGBAPixel * pixel = result.getPixel(x,y);
-  //       *pixel = node->avg;
-  //     }
-  //   }
+void SQtree::render_recursive(Node *node, PNG &im) {
+  if (node->NW == NULL) {
 
-  //   return result;
-  // }
+    for (int x=0; x < node->width; x++) {
+      for (int y=0; y<node->height; y++) {
+        RGBAPixel *pixel = im.getPixel(node->upLeft.first + x, node->upLeft.second + y);
+        *pixel = node->avg;
+      }
+    }
+  } else {
+    render_recursive(node->NW, im);
+    render_recursive(node->NE, im);
+    render_recursive(node->SW, im);
+    render_recursive(node->SE, im);
+
+  }
 }
 
 /**
  * Delete allocated memory.
  */
 void SQtree::clear() {
-  // Your code here.
-
-  // clearAll(root);
-  // root = NULL;
+  clearAll(root);
+  root = NULL;
  
 }
 
-void SQtree:: clearAll(Node * & node) {
-  // if (node == NULL) {
-  //   return;
-  // }
-  // else {
+void SQtree::clearAll(Node * & node) {
+  if (node == NULL) {
+    return;
+  }
+  else {
 
-  //   clearAll(node->NW);
-  //   clearAll(node->NE);
-  //   clearAll(node->SW);
-  //   clearAll(node->SE);
+    clearAll(node->NW);
+    clearAll(node->NE);
+    clearAll(node->SW);
+    clearAll(node->SE);
 
-  //   node -> NW = NULL;
-  //   node -> NE = NULL;
-  //   node -> SW = NULL;
-  //   node -> SE = NULL;
+    node->NW = NULL;
+    node->NE = NULL;
+    node->SW = NULL;
+    node->SE = NULL;
     
 
-  //   delete node;
+    delete node;
 
-  //   node = NULL;
-  // }
+    node = NULL;
+  }
 }
 
 
 
 void SQtree::copy(const SQtree & other) {
   // Your code here.  Node *curr = other.head_;
-  //root = copy_helper(other);
+  //root = copyAll(other, other.root);
 }
 
-
+void SQtree::copyAll(const SQtree & other, Node * & currNode) {
+  if (currNode == NULL) {
+    return;
+  } else {
+    return;
+  }
+}
 
 
 int SQtree::size() {

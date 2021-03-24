@@ -279,7 +279,9 @@ RGBAPixel stats::getAvg(pair<int, int> ul, int w, int h)
   RGBAPixel pixel;
 
   long dim = w * h;
-
+  if (dim == 0) {
+    return pixel;
+  }
   long temp_red;
   long temp_green;
   long temp_blue;

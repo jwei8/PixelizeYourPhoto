@@ -16,19 +16,19 @@ int main() {
   stats s(orig);
   s.getVar(make_pair(0,0), 2,2);
   
-  /*
-  orig.readFromFile("images/orig/small2.png");
-  orig.readFromFile("images/orig/pacman.png");
-  orig.readFromFile("images/orig/huckleberry_hound.png");
-  orig.readFromFile("images/orig/rocky.png");
-  orig.readFromFile("images/orig/rocky_bullwinkle.png");
-  orig.readFromFile("images/orig/colour.png");
-  orig.readFromFile("images/orig/klee-flora-on-sand.png");
-  orig.readFromFile("images/orig/stanley-totem-poles.png");
-  */
+  
+  // orig.readFromFile("images/orig/small2.png");
+   orig.readFromFile("images/orig/pacman.png");
+  // orig.readFromFile("images/orig/huckleberry_hound.png");
+  // orig.readFromFile("images/orig/rocky.png");
+  // orig.readFromFile("images/orig/rocky_bullwinkle.png");
+  // orig.readFromFile("images/orig/colour.png");
+  // orig.readFromFile("images/orig/klee-flora-on-sand.png");
+  // orig.readFromFile("images/orig/stanley-totem-poles.png");
+  
   
   // use it to build a sqtree (try other tolerances)
-  //SQtree t(orig,10.0);
+  SQtree t(orig,10.0);
 
   // copy the tree (to show you can)
   //SQtree tCopy(t);
